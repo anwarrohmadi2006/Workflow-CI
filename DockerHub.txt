@@ -1,0 +1,4 @@
+https://hub.docker.com/r/YOUR_DOCKERHUB_USERNAME/house-prices-model
+
+# Ganti YOUR_DOCKERHUB_USERNAME dengan username Docker Hub Anda
+# Image akan dipush otomatis oleh GitHub Actions
