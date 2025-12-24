@@ -1,0 +1,3 @@
+# Link DockerHub Image K3 - Workflow-CI
+https://hub.docker.com/r/anwarrohmadi2006/msml-houseprices
+Tag: latest
