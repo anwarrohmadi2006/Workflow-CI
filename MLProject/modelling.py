@@ -41,12 +41,13 @@ def main():
         if env_var in os.environ:
             del os.environ[env_var]
     
-    # Step 3: Set DAGSHUB_USER_TOKEN for dagshub.init() to use
+    # Step 3: Authenticate with DagsHub using the token BEFORE calling init
     if os.getenv('DAGSHUB_TOKEN'):
-        os.environ['DAGSHUB_USER_TOKEN'] = os.getenv('DAGSHUB_TOKEN')
-        print("CI detected: Using DAGSHUB_TOKEN for authentication")
+        import dagshub.auth
+        dagshub.auth.add_app_token(token=os.getenv('DAGSHUB_TOKEN'))
+        print("CI detected: Token registered with dagshub.auth.add_app_token()")
     
-    # Step 4: Use dagshub.init() - this handles EVERYTHING correctly
+    # Step 4: Use dagshub.init() - now it will use the registered token
     dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Membangun_model', mlflow=True)
     print(f"DagsHub initialized: {mlflow.get_tracking_uri()}")
     
