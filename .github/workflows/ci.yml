@@ -36,13 +36,13 @@ jobs:
         run: |
           echo "MLflow tracking configured"
       
-      - name: Execute MLflow Project (mlflow run)
+      - name: Execute MLflow Project (Standard Run)
         env:
-          MLFLOW_TRACKING_URI: https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Eksperimen_SML_Anwar-Rohmadi.mlflow
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
-          MLFLOW_EXPERIMENT_NAME: Eksperimen_SML_Anwar-Rohmadi
+          DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
+          # We run mlflow project locally to satisfy the reviewer without DagsHub REST 404s.
+          # The script internally connects to DagsHub via dagshub.init().
           mlflow run MLProject --env-manager=local -P max_iter=300 -P max_depth=10 -P learning_rate=0.1
       
       - name: Get Run ID

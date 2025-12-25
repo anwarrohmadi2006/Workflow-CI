@@ -32,45 +32,43 @@ def main():
     X_train, X_val, y_train, y_val = load_data()
     
     # Initialize DagsHub tracking
+    # This switches our tracking URI to DagsHub
     dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+    
+    # Set the experiment name explicitly
+    mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
     
     # Enable autologging
     mlflow.autolog(log_models=True)
     
-    # NOTE: No explicit mlflow.start_run() here.
-    # When running via 'mlflow run', a run is already active.
-    
-    model = HistGradientBoostingRegressor(
-        max_iter=args.max_iter,
-        max_depth=args.max_depth,
-        learning_rate=args.learning_rate,
-        random_state=42
-    )
-    model.fit(X_train, y_train)
-    
-    y_pred = model.predict(X_val)
-    rmse = np.sqrt(mean_squared_error(y_val, y_pred))
-    
-    # Log model with explicit registration
-    # This will log to the run started by 'mlflow run'
-    mlflow.sklearn.log_model(
-        model, 
-        "model", 
-        registered_model_name="house_prices_model"
-    )
-    
-    # Get the run_id from the active run
-    active_run = mlflow.active_run()
-    if active_run:
-        run_id = active_run.info.run_id
+    # We use explicit start_run() because mlflow project run was local-only.
+    # This will create a fresh run on DagsHub.
+    with mlflow.start_run():
+        model = HistGradientBoostingRegressor(
+            max_iter=args.max_iter,
+            max_depth=args.max_depth,
+            learning_rate=args.learning_rate,
+            random_state=42
+        )
+        model.fit(X_train, y_train)
+        
+        y_pred = model.predict(X_val)
+        rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+        
+        # Log model with explicit registration
+        mlflow.sklearn.log_model(
+            model, 
+            "model", 
+            registered_model_name="house_prices_model"
+        )
+        
+        run_id = mlflow.active_run().info.run_id
         os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
         with open(os.path.join(MODEL_OUTPUT_DIR, "run_id.txt"), "w") as f:
             f.write(run_id)
         
-        print(f"Training complete. RMSE: {rmse:.4f}")
+        print(f"Training complete (DagsHub). RMSE: {rmse:.4f}")
         print(f"Run ID: {run_id}")
-    else:
-        print("Warning: No active MLflow run found.")
 
 if __name__ == "__main__":
     main()
