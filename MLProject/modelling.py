@@ -32,7 +32,11 @@ def main():
     X_train, X_val, y_train, y_val = load_data()
     
     # Initialize DagsHub tracking internally
-    # Bulletproof: We explicitly set tracking URI and credentials to bypass project-level locks
+    # Bulletproof: First end any active run from the local mlflow project context
+    if mlflow.active_run():
+        mlflow.end_run()
+    
+    # Now switch tracking to DagsHub
     tracking_uri = "https://dagshub.com/anwarrohmadi2006/Eksperimen_SML_Anwar-Rohmadi.mlflow"
     mlflow.set_tracking_uri(tracking_uri)
     
@@ -53,7 +57,7 @@ def main():
     # Enable autologging
     mlflow.autolog(log_models=True)
     
-    # We use an explicit start_run to ensure the run is created ON DAGSHUB
+    # Now start a FRESH run on DagsHub (no conflicts with local run)
     with mlflow.start_run() as run:
         remote_run_id = run.info.run_id
         
