@@ -47,7 +47,7 @@ def main():
         print("CI detected: Using DAGSHUB_TOKEN for authentication")
     
     # Step 4: Use dagshub.init() - this handles EVERYTHING correctly
-    dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+    dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Membangun_model', mlflow=True)
     print(f"DagsHub initialized: {mlflow.get_tracking_uri()}")
     
     # Step 5: Enable autologging BEFORE starting run
