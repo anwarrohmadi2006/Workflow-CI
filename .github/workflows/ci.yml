@@ -13,6 +13,8 @@ env:
 jobs:
   train-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for pushing changes back to repo
     
     steps:
       - name: Checkout repository
