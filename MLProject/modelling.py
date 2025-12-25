@@ -42,11 +42,14 @@ def main():
         # For local interactive use
         dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
     
-    # Set the experiment name explicitly
-    mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
-    
     # Enable autologging
     mlflow.autolog(log_models=True)
+    
+    # Try to set experiment, but don't crash if DagsHub REST API returns 404
+    try:
+        mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
+    except Exception as e:
+        print(f"Note: Could not set experiment precisely via API, logging to default. Error: {e}")
     
     # We use explicit start_run() because mlflow project run was local-only.
     # This will create a fresh run on DagsHub.
