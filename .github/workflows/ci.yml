@@ -41,6 +41,7 @@ jobs:
           MLFLOW_TRACKING_URI: https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Eksperimen_SML_Anwar-Rohmadi.mlflow
           MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+          MLFLOW_EXPERIMENT_NAME: Eksperimen_SML_Anwar-Rohmadi
         run: |
           mlflow run MLProject --env-manager=local -P max_iter=300 -P max_depth=10 -P learning_rate=0.1
       

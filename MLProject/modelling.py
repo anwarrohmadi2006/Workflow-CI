@@ -10,6 +10,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import mlflow
 import mlflow.sklearn
+import dagshub
 
 DATA_DIR = "house_prices_preprocessing"
 MODEL_OUTPUT_DIR = "model_output"
@@ -29,6 +30,9 @@ def main():
     args = parser.parse_args()
     
     X_train, X_val, y_train, y_val = load_data()
+    
+    # Initialize DagsHub tracking
+    dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
     
     # Enable autologging
     mlflow.autolog(log_models=True)
