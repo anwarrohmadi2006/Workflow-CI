@@ -1,1 +1,2 @@
-﻿https://hub.docker.com/r/anwarrohmadi111784/mlops-dicoding-model
+Tautan Docker Hub Kriteria 3 (Workflow-CI):
+https://hub.docker.com/r/anwarrohmadi111784/house-prices-model
