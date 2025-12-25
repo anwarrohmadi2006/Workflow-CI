@@ -31,40 +31,32 @@ def main():
     
     X_train, X_val, y_train, y_val = load_data()
     
-    # Initialize DagsHub tracking internally
-    # Bulletproof: First end any active run from the local mlflow project context
+    # ==== BULLETPROOF DAGSHUB INTEGRATION ====
+    # Step 1: End any active run from 'mlflow run' context
     if mlflow.active_run():
         mlflow.end_run()
     
-    # CRITICAL: Clear the MLFLOW_RUN_ID env var set by 'mlflow run'
-    # This prevents start_run() from trying to resume the local run on DagsHub
-    if 'MLFLOW_RUN_ID' in os.environ:
-        del os.environ['MLFLOW_RUN_ID']
+    # Step 2: Clear ALL MLflow environment variables that could cause conflicts
+    for env_var in ['MLFLOW_RUN_ID', 'MLFLOW_EXPERIMENT_ID', 'MLFLOW_TRACKING_URI']:
+        if env_var in os.environ:
+            del os.environ[env_var]
     
-    # Now switch tracking to DagsHub
-    tracking_uri = "https://dagshub.com/anwarrohmadi2006/Eksperimen_SML_Anwar-Rohmadi.mlflow"
-    mlflow.set_tracking_uri(tracking_uri)
-    
+    # Step 3: Set DAGSHUB_USER_TOKEN for dagshub.init() to use
     if os.getenv('DAGSHUB_TOKEN'):
-        os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv('DAGSHUB_USERNAME', 'anwarrohmadi2006')
-        os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('DAGSHUB_TOKEN')
-        print(f"CI detected: Logging remotely to {tracking_uri}")
-    else:
-        # Fallback for local testing
-        dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+        os.environ['DAGSHUB_USER_TOKEN'] = os.getenv('DAGSHUB_TOKEN')
+        print("CI detected: Using DAGSHUB_TOKEN for authentication")
     
-    # Try to set experiment
-    try:
-        mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
-    except Exception as e:
-        print(f"DagsHub Experiment Sync Note: {e}")
+    # Step 4: Use dagshub.init() - this handles EVERYTHING correctly
+    dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+    print(f"DagsHub initialized: {mlflow.get_tracking_uri()}")
     
-    # Enable autologging
+    # Step 5: Enable autologging BEFORE starting run
     mlflow.autolog(log_models=True)
     
-    # Now start a FRESH run on DagsHub (no conflicts with local run)
+    # Step 6: Start a fresh run
     with mlflow.start_run() as run:
         remote_run_id = run.info.run_id
+        print(f"Started run: {remote_run_id}")
         
         model = HistGradientBoostingRegressor(
             max_iter=args.max_iter,
@@ -84,13 +76,13 @@ def main():
             registered_model_name="house_prices_model"
         )
         
-        # CRITICAL: We save the REMOTE run_id (DagsHub) for the next CI steps
+        # Save run_id for next CI steps
         os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
         with open(os.path.join(MODEL_OUTPUT_DIR, "run_id.txt"), "w") as f:
             f.write(remote_run_id)
         
-        print(f"Training complete (Remote DagsHub). RMSE: {rmse:.4f}")
-        print(f"Remote Run ID: {remote_run_id}")
+        print(f"Training complete (DagsHub). RMSE: {rmse:.4f}")
+        print(f"Run ID: {remote_run_id}")
 
 if __name__ == "__main__":
     main()

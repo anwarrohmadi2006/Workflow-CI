@@ -30,13 +30,11 @@ jobs:
       
       - name: Execute MLflow Project (Standard Run)
         env:
-          # Bulletproof: Force local project initialization to avoid DagsHub REST 404s
-          MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
-          DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          # Only pass the DagsHub token - the script handles everything else
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
           # This run is local-only to satisfy the reviewer's requirement.
-          # The script internally connects to DagsHub for remote logging.
+          # The script internally connects to DagsHub via dagshub.init().
           mlflow run MLProject --env-manager=local -P max_iter=300 -P max_depth=10 -P learning_rate=0.1
       
       - name: Get Run ID
