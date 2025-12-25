@@ -32,8 +32,15 @@ def main():
     X_train, X_val, y_train, y_val = load_data()
     
     # Initialize DagsHub tracking
-    # This switches our tracking URI to DagsHub
-    dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+    # If in CI (DAGSHUB_TOKEN exists), use environment variables for authentication
+    if os.getenv('DAGSHUB_TOKEN'):
+        mlflow.set_tracking_uri("https://dagshub.com/anwarrohmadi2006/Eksperimen_SML_Anwar-Rohmadi.mlflow")
+        os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv('DAGSHUB_USERNAME', 'anwarrohmadi2006')
+        os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('DAGSHUB_TOKEN')
+        print("CI detected: Using environment variables for DagsHub authentication.")
+    else:
+        # For local interactive use
+        dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
     
     # Set the experiment name explicitly
     mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
