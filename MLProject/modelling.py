@@ -31,29 +31,29 @@ def main():
     
     X_train, X_val, y_train, y_val = load_data()
     
-    # Initialize DagsHub tracking
-    # If in CI (DAGSHUB_TOKEN exists), use environment variables for authentication
+    # Initialize DagsHub tracking internally
+    # This allows the script to log to DagsHub even if the MLflow Project context is local
     if os.getenv('DAGSHUB_TOKEN'):
         mlflow.set_tracking_uri("https://dagshub.com/anwarrohmadi2006/Eksperimen_SML_Anwar-Rohmadi.mlflow")
         os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv('DAGSHUB_USERNAME', 'anwarrohmadi2006')
         os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('DAGSHUB_TOKEN')
-        print("CI detected: Using environment variables for DagsHub authentication.")
+        print("CI detected: Scaling internal logging to DagsHub.")
     else:
-        # For local interactive use
         dagshub.init(repo_owner='anwarrohmadi2006', repo_name='Eksperimen_SML_Anwar-Rohmadi', mlflow=True)
+    
+    # Try to set experiment
+    try:
+        mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
+    except Exception as e:
+        print(f"DagsHub Experiment Sync Note: {e}")
     
     # Enable autologging
     mlflow.autolog(log_models=True)
     
-    # Try to set experiment, but don't crash if DagsHub REST API returns 404
-    try:
-        mlflow.set_experiment('Eksperimen_SML_Anwar-Rohmadi')
-    except Exception as e:
-        print(f"Note: Could not set experiment precisely via API, logging to default. Error: {e}")
-    
-    # We use explicit start_run() because mlflow project run was local-only.
-    # This will create a fresh run on DagsHub.
-    with mlflow.start_run():
+    # We use an explicit start_run to ensure the run is created ON DAGSHUB
+    with mlflow.start_run() as run:
+        remote_run_id = run.info.run_id
+        
         model = HistGradientBoostingRegressor(
             max_iter=args.max_iter,
             max_depth=args.max_depth,
@@ -72,13 +72,13 @@ def main():
             registered_model_name="house_prices_model"
         )
         
-        run_id = mlflow.active_run().info.run_id
+        # CRITICAL: We save the REMOTE run_id (DagsHub) for the next CI steps
         os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
         with open(os.path.join(MODEL_OUTPUT_DIR, "run_id.txt"), "w") as f:
-            f.write(run_id)
+            f.write(remote_run_id)
         
-        print(f"Training complete (DagsHub). RMSE: {rmse:.4f}")
-        print(f"Run ID: {run_id}")
+        print(f"Training complete (Remote DagsHub). RMSE: {rmse:.4f}")
+        print(f"Remote Run ID: {remote_run_id}")
 
 if __name__ == "__main__":
     main()

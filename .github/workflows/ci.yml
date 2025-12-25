@@ -42,11 +42,12 @@ jobs:
       
       - name: Execute MLflow Project (Standard Run)
         env:
+          # We use a local backend for 'mlflow run' context to avoid DagsHub REST 404s.
+          # The script internally syncs to DagsHub via dagshub.init().
+          MLFLOW_TRACKING_URI: sqlite:///mlflow.db
           DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          # We run mlflow project locally to satisfy the reviewer without DagsHub REST 404s.
-          # The script internally connects to DagsHub via dagshub.init().
           mlflow run MLProject --env-manager=local -P max_iter=300 -P max_depth=10 -P learning_rate=0.1
       
       - name: Get Run ID
