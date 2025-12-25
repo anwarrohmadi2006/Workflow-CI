@@ -30,40 +30,43 @@ def main():
     
     X_train, X_val, y_train, y_val = load_data()
     
-    with mlflow.start_run():
-        mlflow.log_param("max_iter", args.max_iter)
-        mlflow.log_param("max_depth", args.max_depth)
-        mlflow.log_param("learning_rate", args.learning_rate)
-        
-        model = HistGradientBoostingRegressor(
-            max_iter=args.max_iter,
-            max_depth=args.max_depth,
-            learning_rate=args.learning_rate,
-            random_state=42
-        )
-        model.fit(X_train, y_train)
-        
-        y_pred = model.predict(X_val)
-        rmse = np.sqrt(mean_squared_error(y_val, y_pred))
-        mae = mean_absolute_error(y_val, y_pred)
-        r2 = r2_score(y_val, y_pred)
-        
-        mlflow.log_metric("rmse", rmse)
-        mlflow.log_metric("mae", mae)
-        mlflow.log_metric("r2", r2)
-        
+    # Enable autologging
+    mlflow.autolog(log_models=True)
+    
+    # NOTE: No explicit mlflow.start_run() here.
+    # When running via 'mlflow run', a run is already active.
+    
+    model = HistGradientBoostingRegressor(
+        max_iter=args.max_iter,
+        max_depth=args.max_depth,
+        learning_rate=args.learning_rate,
+        random_state=42
+    )
+    model.fit(X_train, y_train)
+    
+    y_pred = model.predict(X_val)
+    rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+    
+    # Log model with explicit registration
+    # This will log to the run started by 'mlflow run'
+    mlflow.sklearn.log_model(
+        model, 
+        "model", 
+        registered_model_name="house_prices_model"
+    )
+    
+    # Get the run_id from the active run
+    active_run = mlflow.active_run()
+    if active_run:
+        run_id = active_run.info.run_id
         os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
-        model_path = os.path.join(MODEL_OUTPUT_DIR, "model")
-        mlflow.sklearn.save_model(model, model_path)
-        mlflow.sklearn.log_model(model, "model", registered_model_name="house_prices_model")
-        
-        run_id = mlflow.active_run().info.run_id
         with open(os.path.join(MODEL_OUTPUT_DIR, "run_id.txt"), "w") as f:
             f.write(run_id)
         
-        print(f"RMSE: {rmse:.4f}, MAE: {mae:.4f}, R2: {r2:.4f}")
-        print(f"Model saved to {model_path}")
+        print(f"Training complete. RMSE: {rmse:.4f}")
         print(f"Run ID: {run_id}")
+    else:
+        print("Warning: No active MLflow run found.")
 
 if __name__ == "__main__":
     main()
