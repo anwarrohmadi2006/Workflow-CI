@@ -36,6 +36,11 @@ def main():
     if mlflow.active_run():
         mlflow.end_run()
     
+    # CRITICAL: Clear the MLFLOW_RUN_ID env var set by 'mlflow run'
+    # This prevents start_run() from trying to resume the local run on DagsHub
+    if 'MLFLOW_RUN_ID' in os.environ:
+        del os.environ['MLFLOW_RUN_ID']
+    
     # Now switch tracking to DagsHub
     tracking_uri = "https://dagshub.com/anwarrohmadi2006/Eksperimen_SML_Anwar-Rohmadi.mlflow"
     mlflow.set_tracking_uri(tracking_uri)
